@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hand Cricket</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0e1217;
+      --panel: #141a22;
+      --accent: #2dd4bf;
+      --accent-2: #60a5fa;
+      --text: #e5e7eb;
+      --muted: #9aa3ab;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 80% 20%, #17202a 0%, var(--bg) 50%);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 20px;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 16px;
+      backdrop-filter: blur(4px);
+    }
+    h2 { font-size: 18px; margin: 8px 0 14px 0 }
+    .row { display: flex; gap: 10px; flex-wrap: wrap }
+    .btn {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: #0f172a;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all .16s ease;
+      font-weight: 600;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.22) }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none }
+    .btn.primary {
+      background: linear-gradient(180deg, var(--accent), #17b4a5);
+      color: #05201e;
+      border-color: transparent;
+    }
+    .btn.alt {
+      background: linear-gradient(180deg, var(--accent-2), #3b82f6);
+      color: #061424;
+      border-color: transparent;
+    }
+    .btn.warn {
+      background: linear-gradient(180deg, var(--warning), #d97706);
+      color: #1f1402;
+      border-color: transparent;
+    }
+    .btn.danger {
+      background: linear-gradient(180deg, var(--danger), #b91c1c);
+      color: #1a0505;
+      border-color: transparent;
+    }
+    .muted { color: var(--muted) }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      font-size: 13px;
+    }
+    .scoreboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .score {
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .big { font-size: 22px; font-weight: 700; letter-spacing: 0.5px }
+    .gs {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .gs .btn { padding: 12px 0; font-size: 18px }
+    .log {
+      height: 220px;
+      overflow: auto;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .log p { margin: 6px 0 }
+    .tag { font-weight: 700 }
+    .sep { height: 1px; background: rgba(255,255,255,0.08); margin: 12px 0 }
+    .flex { display: flex; align-items: center; justify-content: space-between }
+    .hint { font-size: 13px; color: var(--muted) }
+    footer { margin-top: 22px; color: var(--muted); font-size: 13px }
+    .gesture-help {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .gesture {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+    .gesture b { color: var(--accent-2) }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">Hand Cricket</div>
+      <span class="pill">
+        <span>Two innings • 6-ball overs • Simple gestures</span>
+      </span>
+    </header>
+
+    <div class="grid">
+      <!-- Left: Game controls -->
+      <div class="card">
+        <h2>Match setup</h2>
+        <div class="row" id="setup">
+          <button class="btn primary" id="btnNew">New match</button>
+          <button class="btn" id="btnReset">Reset</button>
+        </div>
+
+        <div class="sep"></div>
+
+        <h2>Toss</h2>
+        <p class="hint">Choose Odd or Even, enter your number (1–6), and toss.</p>
+        <div class="row">
+          <button class="btn" id="oddBtn">Odd</button>
+          <button class="btn" id="evenBtn">Even</button>
+          <input id="tossInput" type="number" min="1" max="6" placeholder="Your number (1–6)" style="width:180px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:#0b1321;color:var(--text);" />
+          <button class="btn alt" id="doToss">Toss</button>
+        </div>
+        <p class="muted" id="tossStatus"></p>
+
+        <div class="row" id="choiceRow" style="margin-top:10px; display:none;">
+          <button class="btn primary" id="chooseBat">Bat first</button>
+          <button class="btn warn" id="chooseBowl">Bowl first</button>
+        </div>
+
+        <div class="sep"></div>
+
+        <h2>Play</h2>
+        <div class="scoreboard">
+          <div class="score">
+            <div>
+              <div>Player</div>
+              <div class="big" id="playerScore">0</div>
+              <div class="hint" id="playerRole">—</div>
+            </div>
+            <div style="text-align:right">
+              <div>CPU</div>
+              <div class="big" id="cpuScore">0</div>
+              <div class="hint" id="cpuRole">—</div>
+            </div>
+          </div>
+          <div class="score">
+            <div>
+              <div>Over</div>
+              <div class="big"><span id="overBalls">0</span>/6</div>
+              <div class="hint" id="inningsHint">Innings: 1</div>
+            </div>
+            <div style="text-align:right">
+              <div>Target</div>
+              <div class="big" id="target">—</div>
+              <div class="hint" id="status">Waiting for toss</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gs">
+          <button class="btn" data-run="1">1</button>
+          <button class="btn" data-run="2">2</button>
+          <button class="btn" data-run="3">3</button>
+          <button class="btn" data-run="4">4</button>
+          <button class="btn" data-run="5">5</button>
+          <button class="btn" data-run="6">6</button>
+        </div>
+
+        <div class="sep"></div>
+
+        <h2>Commentary</h2>
+        <div class="log" id="log"></div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn" id="btnUndo">Undo last ball</button>
+          <button class="btn danger" id="btnForfeit">Forfeit</button>
+          <button class="btn" id="btnNextMatch" style="display:none;">Play again</button>
+        </div>
+      </div>
+
+      <!-- Right: Help -->
+      <div class="card">
+        <h2>How it works</h2>
+        <p class="muted">
+          Score by choosing 1–6. If your number equals your opponent’s number, the striker is out. Each over has 6 balls.
+          After the first innings, roles swap and the second player chases the target.
+        </p>
+
+        <div class="gesture-help">
+          <div class="gesture">
+            <b>Gestures:</b><br/>
+            1 = index finger<br/>
+            2 = scissors (V)<br/>
+            3 = middle+ring+little<br/>
+            4 = index + 3-fingers<br/>
+            5 = paper (flat hand)<br/>
+            6 = fist with thumb
+          </div>
+          <div class="gesture">
+            <b>Tips:</b><br/>
+            Mix up your moves, watch patterns, and keep pressure with quick singles. Don’t be predictable near the end.
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <h2>Match rules</h2>
+        <ul>
+          <li><span class="tag">Toss:</span> Pick Odd/Even, enter 1–6, total decides the winner who chooses to bat or bowl first.</li>
+          <li><span class="tag">Out:</span> If both players select the same number on a ball, the striker is out.</li>
+          <li><span class="tag">Over:</span> 6 balls per over. The innings can end early when the chasing side reaches the target.</li>
+          <li><span class="tag">Win:</span> Higher total at the end of both innings; or chase completed.</li>
+        </ul>
+      </div>
+    </div>
+
+    <footer>
+      Made for quick play anywhere. Customize overs or difficulty in the code below.
+    </footer>
+  </div>
+
+  <script>
+    // Game state
+    const state = {
+      started: false,
+      tossChoice: null,         // 'odd' | 'even'
+      playerWonToss: null,      // boolean|null
+      innings: 1,               // 1 or 2
+      ballsThisOver: 0,         // 0..6
+      ballsTotal: 0,            // track full innings, if needed
+      oversBallLimit: 6,        // balls per over
+      roles: {                  // current roles for THIS ball
+        player: null,           // 'bat' | 'bowl'
+        cpu: null               // 'bat' | 'bowl'
+      },
+      score: { player: 0, cpu: 0 },
+      target: null,             // number or null
+      history: [],              // per-ball history for undo
+      lastPlayerMoves: [],      // for CPU adaptive strategy
+      isOut: false,             // flag when wicket fallen on a ball
+      inningsOver: false,       // per innings end
+      matchOver: false          // whole match end
+    };
+
+    // Elements
+    const el = {
+      oddBtn: document.getElementById('oddBtn'),
+      evenBtn: document.getElementById('evenBtn'),
+      tossInput: document.getElementById('tossInput'),
+      doToss: document.getElementById('doToss'),
+      tossStatus: document.getElementById('tossStatus'),
+      choiceRow: document.getElementById('choiceRow'),
+      chooseBat: document.getElementById('chooseBat'),
+      chooseBowl: document.getElementById('chooseBowl'),
+      playerScore: document.getElementById('playerScore'),
+      cpuScore: document.getElementById('cpuScore'),
+      playerRole: document.getElementById('playerRole'),
+      cpuRole: document.getElementById('cpuRole'),
+      overBalls: document.getElementById('overBalls'),
+      status: document.getElementById('status'),
+      target: document.getElementById('target'),
+      inningsHint: document.getElementById('inningsHint'),
+      log: document.getElementById('log'),
+      gsButtons: Array.from(document.querySelectorAll('.gs .btn')),
+      btnNew: document.getElementById('btnNew'),
+      btnReset: document.getElementById('btnReset'),
+      btnUndo: document.getElementById('btnUndo'),
+      btnForfeit: document.getElementById('btnForfeit'),
+      btnNextMatch: document.getElementById('btnNextMatch')
+    };
+
+    // Utilities
+    const clampRun = (x) => Math.max(1, Math.min(6, x|0));
+    const randRun = () => Math.floor(Math.random() * 6) + 1;
+    const log = (msg) => {
+      const p = document.createElement('p');
+      p.textContent = msg;
+      el.log.appendChild(p);
+      el.log.scrollTop = el.log.scrollHeight;
+    };
+    const setRolesLabel = () => {
+      el.playerRole.textContent = state.roles.player ? ('You: ' + state.roles.player.toUpperCase()) : '—';
+      el.cpuRole.textContent = state.roles.cpu ? ('CPU: ' + state.roles.cpu.toUpperCase()) : '—';
+    };
+    const updateUI = () => {
+      el.playerScore.textContent = state.score.player;
+      el.cpuScore.textContent = state.score.cpu;
+      el.overBalls.textContent = state.ballsThisOver;
+      el.target.textContent = state.target == null ? '—' : state.target;
+      el.inningsHint.textContent = 'Innings: ' + state.innings;
+      setRolesLabel();
+      el.status.textContent = state.matchOver
+        ? 'Match over'
+        : (state.inningsOver ? 'Innings break' : (state.started ? 'Ready' : 'Waiting for toss'));
+      el.btnNextMatch.style.display = state.matchOver ? 'inline-block' : 'none';
+
+      // Enable/disable gesture buttons based on phase
+      const canPlayBall = state.started && !state.inningsOver && !state.matchOver && state.roles.player;
+      el.gsButtons.forEach(b => b.disabled = !canPlayBall);
+      el.btnUndo.disabled = state.history.length === 0 || state.matchOver;
+    };
+
+    const resetMatch = () => {
+      state.started = false;
+      state.tossChoice = null;
+      state.playerWonToss = null;
+      state.innings = 1;
+      state.ballsThisOver = 0;
+      state.ballsTotal = 0;
+      state.roles.player = null;
+      state.roles.cpu = null;
+      state.score.player = 0;
+      state.score.cpu = 0;
+      state.target = null;
+      state.history = [];
+      state.lastPlayerMoves = [];
+      state.isOut = false;
+      state.inningsOver = false;
+      state.matchOver = false;
+      el.tossStatus.textContent = '';
+      el.choiceRow.style.display = 'none';
+      el.log.innerHTML = '';
+      updateUI();
+    };
+
+    const newMatch = () => {
+      resetMatch();
+      log('New match created. Do the toss to begin.');
+    };
+
+    // Toss handling
+    el.oddBtn.addEventListener('click', () => {
+      state.tossChoice = 'odd';
+      el.oddBtn.classList.add('primary');
+      el.evenBtn.classList.remove('primary');
+    });
+    el.evenBtn.addEventListener('click', () => {
+      state.tossChoice = 'even';
+      el.evenBtn.classList.add('primary');
+      el.oddBtn.classList.remove('primary');
+    });
+
+    el.doToss.addEventListener('click', () => {
+      const playerNum = clampRun(parseInt(el.tossInput.value, 10));
+      if (!state.tossChoice) { el.tossStatus.textContent = 'Choose Odd or Even first.'; return; }
+      if (!(playerNum >= 1 && playerNum <= 6)) { el.tossStatus.textContent = 'Enter a number between 1 and 6.'; return; }
+
+      const cpuNum = randRun();
+      const total = playerNum + cpuNum;
+      const isOdd = total % 2 === 1;
+      const playerWins = (state.tossChoice === 'odd' && isOdd) || (state.tossChoice === 'even' && !isOdd);
+      state.playerWonToss = playerWins;
+      el.tossStatus.textContent = `You chose ${state.tossChoice.toUpperCase()}. You: ${playerNum}, CPU: ${cpuNum}, total ${total} (${isOdd ? 'Odd' : 'Even'}). ${playerWins ? 'You won the toss!' : 'CPU won the toss.'}`;
+      log(`Toss: You=${playerNum}, CPU=${cpuNum}, total=${total} → ${playerWins ? 'You win' : 'CPU wins'}`);
+
+      if (playerWins) {
+        el.choiceRow.style.display = 'flex';
+      } else {
+        // CPU chooses randomly but slightly prefers batting
+        const cpuChoice = Math.random() < 0.6 ? 'bat' : 'bowl';
+        setRoles(cpuChoice === 'bat' ? 'cpu' : 'player');
+        startInnings();
+      }
+    });
+
+    // Choose to bat or bowl
+    el.chooseBat.addEventListener('click', () => {
+      setRoles('player');
+      el.choiceRow.style.display = 'none';
+      startInnings();
+    });
+    el.chooseBowl.addEventListener('click', () => {
+      setRoles('cpu');
+      el.choiceRow.style.display = 'none';
+      startInnings();
+    });
+
+    function setRoles(battingSide) {
+      // battingSide: 'player' or 'cpu'
+      state.roles.player = battingSide === 'player' ? 'bat' : 'bowl';
+      state.roles.cpu    = battingSide === 'cpu'    ? 'bat' : 'bowl';
+      updateUI();
+    }
+
+    function startInnings() {
+      state.started = true;
+      state.inningsOver = false;
+      state.ballsThisOver = 0;
+      state.ballsTotal = 0;
+      state.isOut = false;
+      updateUI();
+      log(`Innings ${state.innings} begins. ${state.roles.player === 'bat' ? 'You bat first.' : 'You bowl first.'}`);
+    }
+
+    // CPU strategy
+    function cpuPick(playerIntent, context) {
+      // context: { playerIsBatting, pressureRun, lastMoves[] }
+      // Basic adaptive approach:
+      // - If player bats and near target, try to match probable player pick.
+      // - Else, bias against player's recent repeats to increase chance of match.
+      const last = state.lastPlayerMoves;
+      // Calculate simple frequency
+      const freq = [0,0,0,0,0,0,0]; // index 1..6
+      last.slice(-6).forEach(v => freq[v]++);
+
+      // Heuristic: guess the player's pick
+      let guess = playerIntent ?? 0;
+      if (!guess) {
+        // If player repeats often, pick their most frequent
+        let maxCount = -1, maxVal = 1;
+        for (let i = 1; i <= 6; i++) {
+          if (freq[i] > maxCount) { maxCount = freq[i]; maxVal = i; }
+        }
+        guess = maxCount > 0 ? maxVal : randRun();
+      }
+
+      // Pressure: in chase, if small runs needed, try to match common low picks
+      if (context && context.pressureRun) {
+        guess = Math.random() < 0.5 ? context.pressureRun : guess;
+      }
+
+      // Add noise to avoid being too predictable
+      const noise = Math.random();
+      if (noise < 0.25) return randRun();
+      if (noise < 0.5) return ((guess + randRun()) % 6) + 1; // twist
+      return guess;
+    }
+
+    // Play a ball
+    el.gsButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!state.started || state.inningsOver || state.matchOver) return;
+
+        const playerRun = parseInt(btn.dataset.run, 10);
+        const playerIsBatting = state.roles.player === 'bat';
+
+        // Context for CPU
+        let pressureRun = null;
+        if (state.innings === 2) {
+          const need = (state.target ?? Infinity) - (state.roles.player === 'bat' ? state.score.player : state.score.cpu);
+          if (need <= 6 && need > 0) pressureRun = need;
+        }
+        const cpuRun = cpuPick(playerRun, { playerIsBatting, pressureRun });
+
+        // Record last player move for adaptation (we track batting-side intent)
+        if (playerIsBatting) state.lastPlayerMoves.push(playerRun);
+
+        const strikerOut = (playerIsBatting && playerRun === cpuRun) || (!playerIsBatting && playerRun === cpuRun);
+        state.ballsThisOver++;
+        state.ballsTotal++;
+
+        let msg = `Ball ${state.ballsThisOver}/6: You=${playerRun}, CPU=${cpuRun} → `;
+        if (strikerOut) {
+          // Wicket: striker side is out, end innings immediately (single-wicket format)
+          state.isOut = true;
+          msg += 'OUT!';
+          applyOutcome(playerIsBatting, 0, true);
+        } else {
+          // Runs: striker gets their selected runs
+          const runs = playerIsBatting ? playerRun : cpuRun;
+          msg += (playerIsBatting ? `You score ${runs}.` : `CPU scores ${runs}.`);
+          applyOutcome(playerIsBatting, runs, false);
+        }
+
+        log(msg);
+        postBallChecks();
+        updateUI();
+      });
+    });
+
+    function applyOutcome(playerIsBatting, runs, isOut) {
+      if (playerIsBatting) {
+        state.score.player += runs;
+      } else {
+        state.score.cpu += runs;
+      }
+    }
+
+    function postBallChecks() {
+      // Over completed?
+      if (state.ballsThisOver >= state.oversBallLimit || state.isOut) {
+        endInnings();
+      } else {
+        // In a chase, check if target reached mid-over
+        if (state.innings === 2 && state.target != null) {
+          const chasingSideScore = state.roles.player === 'bat' ? state.score.player : state.score.cpu;
+          if (chasingSideScore >= state.target) {
+            endMatchByChase();
+          }
+        }
+      }
+    }
+
+    function endInnings() {
+      state.inningsOver = true;
+      const pBatFirst = state.innings === 1 && state.roles.player === 'bat';
+      const firstInningsScore = pBatFirst ? state.score.player : state.score.cpu;
+      log(`End of innings ${state.innings}. Score: Player ${state.score.player} / CPU ${state.score.cpu}.`);
+
+      if (state.innings === 1) {
+        // Set target and swap roles
+        state.target = firstInningsScore + 1;
+        state.innings = 2;
+        state.ballsThisOver = 0;
+        state.ballsTotal = 0;
+        state.lastPlayerMoves = [];
+        state.isOut = false;
+        // Swap roles
+        const newBattingSide = state.roles.player === 'bat' ? 'cpu' : 'player';
+        setRoles(newBattingSide);
+        state.inningsOver = false;
+        log(`Second innings begins. Target: ${state.target}. ${state.roles.player === 'bat' ? 'You are chasing.' : 'CPU is chasing.'}`);
+      } else {
+        // End of match
+        decideWinner();
+      }
+      updateUI();
+    }
+
+    function endMatchByChase() {
+      state.matchOver = true;
+      state.inningsOver = true;
+      const playerChasing = state.roles.player === 'bat';
+      log(playerChasing ? 'You have chased the target!' : 'CPU has chased the target!');
+      decideWinner(true);
+      updateUI();
+    }
+
+    function decideWinner(chaseEnded = false) {
+      const p = state.score.player;
+      const c = state.score.cpu;
+      let result = '';
+      if (p > c) result = 'You win!';
+      else if (c > p) result = 'CPU wins.';
+      else result = 'Tie.';
+      log(`Final score: Player ${p} vs CPU ${c}. ${result}`);
+      el.status.textContent = 'Match over';
+      state.matchOver = true;
+      el.btnNextMatch.style.display = 'inline-block';
+    }
+
+    // Undo last ball (limited: only within current innings progression)
+    el.btnUndo.addEventListener('click', () => {
+      // For simplicity, store snapshots per ball
+      if (state.history.length === 0 || state.matchOver) return;
+      const snap = state.history.pop();
+      Object.assign(state, JSON.parse(snap));
+      log('Undid last ball.');
+      updateUI();
+    });
+
+    // Forfeit
+    el.btnForfeit.addEventListener('click', () => {
+      if (!state.started || state.matchOver) return;
+      state.matchOver = true;
+      log('You forfeited. CPU wins.');
+      updateUI();
+    });
+
+    // Next match
+    el.btnNextMatch.addEventListener('click', () => {
+      newMatch();
+    });
+
+    // Snapshot before each ball for undo
+    const originalApplyOutcome = applyOutcome;
+    function snapshotState() {
+      state.history.push(JSON.stringify(state));
+    }
+    // Wrap gesture buttons to snapshot
+    el.gsButtons.forEach(btn => {
+      const origHandler = btn.onclick;
+      btn.addEventListener('click', (e) => {
+        snapshotState();
+      }, { capture: true });
+    });
+
+    // Reset and New
+    el.btnReset.addEventListener('click', resetMatch);
+    el.btnNew.addEventListener('click', newMatch);
+
+    // Initialize
+    resetMatch();
+  </script>
+</body>
+</html>
